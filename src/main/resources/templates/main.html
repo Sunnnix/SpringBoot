@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Schüler verwalten</title>
+</head>
+<body>
+<div style="display: flex; flex-direction: row;">
+    <!-- Formular zum Hinzufügen von Schülern (links) -->
+    <div style="flex: 1;">
+        <form id="createForm">
+            <label for="name1">Vorname:</label>
+            <input type="text" id="name1" name="name1" required><br><br>
+
+            <label for="name2">Nachname:</label>
+            <input type="text" id="name2" name="name2" required><br><br>
+
+            <label for="age">Alter:</label>
+            <input type="number" id="age" name="age" required><br><br>
+
+            <input type="submit" value="Schüler hinzufügen">
+        </form>
+        <br><br>
+
+        <ul id="resultList"></ul>
+    </div>
+
+    <!-- Suchleiste zum Suchen nach Vornamen (rechts) -->
+    <div style="flex: 1;">
+        <label for="searchName">Suche nach Vornamen:</label>
+        <input type="text" id="searchName" name="searchName">
+        <button id="searchButton">Suchen</button>
+        <br><br>
+
+        <!-- Hier wird die Ergebnisliste angezeigt -->
+        <ul id="searchResultList"></ul>
+    </div>
+</div>
+
+<script>
+document.getElementById("createForm").addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    var name1 = document.getElementById("name1").value;
+    var name2 = document.getElementById("name2").value;
+    var age = document.getElementById("age").value;
+
+    fetch("http://localhost:8080/create?name1=" + name1 + "&name2=" + name2 + "&age=" + age, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Ergebnis in die Liste einfügen
+        var resultList = document.getElementById("resultList");
+        var listItem = document.createElement("li");
+        listItem.innerHTML = "ID: " + data.id + "<br>Name: " + data.firstName + " " + data.lastName + "<br>Alter: " + data.age;
+        resultList.insertBefore(listItem, resultList.firstChild); // Element oben in die Liste einfügen
+    })
+    .catch(error => {
+        console.error("Fehler bei der AJAX-Anfrage:", error);
+    });
+});
+
+document.getElementById("searchButton").addEventListener("click", function () {
+    var searchName = document.getElementById("searchName").value;
+
+    fetch("http://localhost:8080/with-firstname/" + searchName)
+    .then(response => response.json())
+    .then(data => {
+        var searchResultList = document.getElementById("searchResultList");
+        searchResultList.innerHTML = ""; // Vorherige Ergebnisse löschen
+
+        if (data.length === 0) {
+            searchResultList.innerHTML = "Keine Ergebnisse gefunden.";
+        } else {
+            data.forEach(item => {
+                var listItem = document.createElement("li");
+                listItem.innerHTML = "ID: " + item.id + "<br>Name: " + item.firstName + " " + item.lastName + "<br>Alter: " + item.age;
+                searchResultList.appendChild(listItem);
+            });
+        }
+    })
+    .catch(error => {
+        console.error("Fehler bei der Suchanfrage:", error);
+    });
+});
+</script>
+</body>
+</html>
